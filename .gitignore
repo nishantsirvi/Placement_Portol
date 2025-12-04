@@ -58,6 +58,14 @@ db.sqlite3-journal
 local_settings.py
 *.pyc
 
+# Django User-uploaded Files (Security)
+backend/media/
+backend/staticfiles/
+backend/resumes/
+backend/profile_pictures/
+media/resumes/
+media/profile_pictures/
+
 # Node
 node_modules/
 npm-debug.log*
@@ -150,3 +158,22 @@ htmlcov/
 .vercel
 .netlify
 
+# Documentation (temporary/testing guides)
+*_IMPLEMENTATION.md
+*_TESTING_GUIDE.md
+*_GUIDE.md
+COMPLETE.txt
+IMPLEMENTATION_SUMMARY.txt
+READ_ME_FIRST.txt
+QUICK_*.md
+BEFORE_AFTER_*.md
+*_COMPLETE.md
+*_FIXED.md
+*_SUMMARY.md
+SETUP_COMPLETE.md
+
+# Batch/Shell Scripts (if environment-specific)
+# Uncomment if you want to ignore these:
+# start-all.bat
+# start-backend.bat
+# start-backend.sh
