@@ -647,25 +647,102 @@ body {
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .main-content {
+    margin-left: 220px;
+    padding: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
+  /* Sidebar becomes overlay on mobile */
+  .sidebar {
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+    width: 100%;
+  }
+
+  /* Mobile menu button */
+  .mobile-menu-btn {
+    display: block;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 998;
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-size: 1.25rem;
+  }
+
   .navbar-container {
     flex-direction: column;
     gap: 1rem;
+    padding: 1rem;
   }
 
   .navbar-menu {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.75rem;
+  }
+
+  .navbar-menu a {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
   }
 
   .header {
     flex-direction: column;
     gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .charts-grid {
@@ -681,6 +758,183 @@ body {
   }
 
   .table-container {
-    overflow-x: scroll;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    min-width: 600px;
+    font-size: 0.875rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Card layouts for mobile */
+  .company-card,
+  .placement-card,
+  .date-card {
+    padding: 1rem;
+  }
+
+  /* Search and filter improvements */
+  .search-filter-container {
+    padding: 1rem;
+  }
+
+  .search-filter-container input,
+  .search-filter-container select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Form improvements */
+  .form-container {
+    padding: 1rem;
+  }
+
+  .form-group label {
+    font-size: 0.875rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem;
+  }
+
+  /* Touch-friendly buttons */
+  .btn {
+    min-height: 44px; /* Apple's recommended touch target */
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .btn-sm {
+    min-height: 36px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Modal improvements */
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Dashboard grid improvements */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* User dropdown */
+  .user-dropdown {
+    right: 0;
+    left: auto;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .navbar-menu a {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .stats-card {
+    padding: 1rem;
+  }
+
+  .stats-card h3 {
+    font-size: 0.875rem;
+  }
+
+  .stats-card .stats-value {
+    font-size: 1.75rem;
+  }
+
+  .company-card h3,
+  .placement-card h3 {
+    font-size: 1rem;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Improve form field spacing */
+  .form-grid {
+    gap: 1rem;
+  }
+
+  /* Smaller buttons on very small screens */
+  .btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* Adjust table for small screens */
+  .data-table {
+    font-size: 0.8rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+/* Landscape mode for tablets */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .main-content {
+    margin-left: 200px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .companies-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .navbar,
+  .btn,
+  .form-container {
+    display: none;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 0;
+  }
+
+  .table-container {
+    overflow: visible;
+  }
+
+  .data-table {
+    page-break-inside: avoid;
   }
 }

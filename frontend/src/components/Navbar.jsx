@@ -1,16 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
     const { user, logout, isAdmin, isStudent, isCompany } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+            if (window.innerWidth > 768) {
+                setIsMobileOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleLogout = async () => {
         await logout();
         navigate("/login");
+    };
+
+    const handleLinkClick = () => {
+        if (isMobile) {
+            setIsMobileOpen(false);
+        }
     };
 
     const getRoleBadge = () => {
@@ -23,11 +43,32 @@ const Navbar = () => {
     const roleBadge = getRoleBadge();
 
     return (
-        <nav className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+        <>
+            {/* Mobile Menu Button */}
+            {isMobile && (
+                <button
+                    className="mobile-menu-btn"
+                    onClick={() => setIsMobileOpen(!isMobileOpen)}
+                    aria-label="Toggle menu"
+                >
+                    ☰
+                </button>
+            )}
+
+            {/* Sidebar Overlay for Mobile */}
+            {isMobile && isMobileOpen && (
+                <div
+                    className="sidebar-overlay"
+                    onClick={() => setIsMobileOpen(false)}
+                />
+            )}
+
+            <nav className={`sidebar ${isCollapsed ? "collapsed" : ""} ${isMobile && isMobileOpen ? "mobile-open" : ""}`}>
             <button
                 className="sidebar-toggle"
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 title={isCollapsed ? "Expand" : "Collapse"}
+                style={{ display: isMobile ? 'none' : 'block' }}
             >
                 {isCollapsed ? "☰" : "✕"}
             </button>
@@ -41,7 +82,7 @@ const Navbar = () => {
 
             <ul className="sidebar-menu">
                 <li>
-                    <Link to="/dashboard" title="Dashboard">
+                    <Link to="/dashboard" title="Dashboard" onClick={handleLinkClick}>
                         <span className="icon">📊</span>
                         {!isCollapsed && (
                             <span className="text">Dashboard</span>
@@ -51,14 +92,14 @@ const Navbar = () => {
                 {/* Students page - only for admin and company users */}
                 {!isStudent && (
                     <li>
-                        <Link to="/students" title="Students">
+                        <Link to="/students" title="Students" onClick={handleLinkClick}>
                             <span className="icon">👨‍🎓</span>
                             {!isCollapsed && <span className="text">Students</span>}
                         </Link>
                     </li>
                 )}
                 <li>
-                    <Link to="/companies" title="Companies">
+                    <Link to="/companies" title="Companies" onClick={handleLinkClick}>
                         <span className="icon">🏢</span>
                         {!isCollapsed && (
                             <span className="text">Companies</span>
@@ -66,13 +107,13 @@ const Navbar = () => {
                     </Link>
                 </li>
                 <li>
-                    <Link to="/placement-progress" title="Progress">
+                    <Link to="/placement-progress" title="Progress" onClick={handleLinkClick}>
                         <span className="icon">📈</span>
                         {!isCollapsed && <span className="text">Progress</span>}
                     </Link>
                 </li>
                 <li>
-                    <Link to="/important-dates" title="Events">
+                    <Link to="/important-dates" title="Events" onClick={handleLinkClick}>
                         <span className="icon">📅</span>
                         {!isCollapsed && <span className="text">Events</span>}
                     </Link>
@@ -125,6 +166,7 @@ const Navbar = () => {
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setShowUserMenu(false);
+                                            handleLinkClick();
                                             navigate("/profile");
                                         }}
                                     >
@@ -135,6 +177,7 @@ const Navbar = () => {
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setShowUserMenu(false);
+                                            handleLinkClick();
                                             navigate("/settings");
                                         }}
                                     >
@@ -145,6 +188,7 @@ const Navbar = () => {
                                         className="dropdown-item logout"
                                         onClick={(e) => {
                                             e.stopPropagation();
+                                            handleLinkClick();
                                             handleLogout();
                                         }}
                                     >
@@ -301,6 +345,7 @@ const Navbar = () => {
                 }
             `}</style>
         </nav>
+        </>
     );
 };
 

@@ -17,7 +17,8 @@ const Students = () => {
     const [filterBranch, setFilterBranch] = useState("ALL");
     const [filterYear, setFilterYear] = useState("ALL");
     const [filterPlaced, setFilterPlaced] = useState("ALL");
-    const [createdCredentials, setCreatedCredentials] = useState(null);
+    const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+    const [tempCredentials, setTempCredentials] = useState({ username: '', password: '', name: '' });
     const [formData, setFormData] = useState({
         enrollment_number: "",
         name: "",
@@ -28,7 +29,6 @@ const Students = () => {
         cgpa: "",
         skills: "",
         is_placed: false,
-        password: "",
     });
 
     useEffect(() => {
@@ -62,18 +62,20 @@ const Students = () => {
                 fetchStudents();
                 resetForm();
             } else {
-                // Create new student
-                await createStudent(formData);
-                
-                // Show credentials if student was created
+                // Generate credentials (not stored in state until after creation)
                 const username = formData.enrollment_number.toLowerCase();
-                const password = formData.password || `${formData.name.split(' ')[0].toLowerCase()}${formData.enrollment_number.slice(-4)}`;
+                const generatedPassword = `${formData.name.split(' ')[0].toLowerCase()}${formData.enrollment_number.slice(-4)}`;
                 
-                setCreatedCredentials({
+                // Create new student with generated password
+                await createStudent({ ...formData, password: generatedPassword });
+                
+                // Show credentials ONCE in a modal, then immediately clear
+                setTempCredentials({
                     username: username,
-                    password: password,
+                    password: generatedPassword,
                     name: formData.name
                 });
+                setShowCredentialsModal(true);
                 
                 fetchStudents();
                 // Don't reset form yet - show credentials first
@@ -122,11 +124,19 @@ const Students = () => {
             cgpa: "",
             skills: "",
             is_placed: false,
-            password: "",
         });
         setEditingStudent(null);
         setShowForm(false);
-        setCreatedCredentials(null);
+        setShowCredentialsModal(false);
+        // Clear credentials immediately
+        setTempCredentials({ username: '', password: '', name: '' });
+    };
+
+    const handleCredentialsAcknowledged = () => {
+        // Clear sensitive data immediately after user acknowledges
+        setTempCredentials({ username: '', password: '', name: '' });
+        setShowCredentialsModal(false);
+        resetForm();
     };
 
     // Filter and search logic
@@ -267,38 +277,80 @@ const Students = () => {
                         {editingStudent ? "Edit Student" : "Add New Student"}
                     </h2>
                     
-                    {/* Credentials Display Modal */}
-                    {createdCredentials && (
+                    {/* Credentials Display Modal - Shows ONCE then clears */}
+                    {showCredentialsModal && (
                         <div style={{
-                            background: '#10b981',
-                            color: 'white',
-                            padding: '1.5rem',
-                            borderRadius: '8px',
-                            marginBottom: '1.5rem',
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1000
                         }}>
-                            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem' }}>✅ Student Account Created Successfully!</h3>
-                            <p style={{ marginBottom: '1rem' }}>The following login credentials have been created for <strong>{createdCredentials.name}</strong>:</p>
                             <div style={{
-                                background: 'rgba(255,255,255,0.2)',
-                                padding: '1rem',
-                                borderRadius: '6px',
-                                fontFamily: 'monospace',
-                                fontSize: '1rem'
+                                background: 'white',
+                                padding: '2rem',
+                                borderRadius: '12px',
+                                maxWidth: '500px',
+                                width: '90%',
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                             }}>
-                                <p style={{ margin: '0.5rem 0' }}><strong>Username:</strong> {createdCredentials.username}</p>
-                                <p style={{ margin: '0.5rem 0' }}><strong>Password:</strong> {createdCredentials.password}</p>
+                                <div style={{
+                                    background: '#10b981',
+                                    color: 'white',
+                                    padding: '1.5rem',
+                                    borderRadius: '8px',
+                                    marginBottom: '1rem'
+                                }}>
+                                    <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem' }}>✅ Student Account Created!</h3>
+                                    <p style={{ marginBottom: '1rem' }}>Login credentials for <strong>{tempCredentials.name}</strong>:</p>
+                                    <div style={{
+                                        background: 'rgba(255,255,255,0.2)',
+                                        padding: '1rem',
+                                        borderRadius: '6px',
+                                        fontFamily: 'monospace',
+                                        fontSize: '1rem'
+                                    }}>
+                                        <p style={{ margin: '0.5rem 0' }}><strong>Username:</strong> {tempCredentials.username}</p>
+                                        <p style={{ margin: '0.5rem 0' }}><strong>Password:</strong> {tempCredentials.password}</p>
+                                    </div>
+                                </div>
+                                <div style={{
+                                    background: '#fef3c7',
+                                    border: '1px solid #f59e0b',
+                                    padding: '1rem',
+                                    borderRadius: '6px',
+                                    marginBottom: '1rem',
+                                    fontSize: '0.875rem'
+                                }}>
+                                    <strong>⚠️ Security Notice:</strong> Copy these credentials NOW. For security, they will be cleared immediately after you close this dialog and cannot be recovered.
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(
+                                                `Username: ${tempCredentials.username}\nPassword: ${tempCredentials.password}`
+                                            );
+                                            alert('Credentials copied to clipboard!');
+                                        }}
+                                        style={{ flex: 1 }}
+                                    >
+                                        📋 Copy to Clipboard
+                                    </button>
+                                    <button 
+                                        className="btn btn-success"
+                                        onClick={handleCredentialsAcknowledged}
+                                        style={{ flex: 1, background: '#10b981' }}
+                                    >
+                                        ✓ I've Saved It
+                                    </button>
+                                </div>
                             </div>
-                            <p style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
-                                ⚠️ Please share these credentials with the student. They can change their password after first login.
-                            </p>
-                            <button 
-                                className="btn btn-light"
-                                onClick={resetForm}
-                                style={{ marginTop: '1rem', background: 'white', color: '#10b981' }}
-                            >
-                                Got it, Close
-                            </button>
                         </div>
                     )}
                     
@@ -405,18 +457,21 @@ const Students = () => {
                                 />
                             </div>
                             {!editingStudent && (
-                                <div className="form-group">
-                                    <label>Login Password (optional)</label>
-                                    <input
-                                        type="text"
-                                        name="password"
-                                        value={formData.password}
-                                        onChange={handleInputChange}
-                                        placeholder="Leave empty for auto-generated password"
-                                    />
-                                    <small style={{ color: '#666', fontSize: '0.875rem', display: 'block', marginTop: '0.25rem' }}>
-                                        Default: {formData.name ? `${formData.name.split(' ')[0].toLowerCase()}` : '(firstname)'}{formData.enrollment_number.slice(-4) || '(last4digits)'}
-                                    </small>
+                                <div className="form-group" style={{
+                                    gridColumn: '1 / -1',
+                                    background: '#f3f4f6',
+                                    padding: '1rem',
+                                    borderRadius: '6px',
+                                    border: '1px dashed #9ca3af'
+                                }}>
+                                    <p style={{ margin: 0, fontSize: '0.875rem', color: '#4b5563' }}>
+                                        🔐 <strong>Auto-generated Password:</strong> {formData.name && formData.enrollment_number ? 
+                                            `${formData.name.split(' ')[0].toLowerCase()}${formData.enrollment_number.slice(-4)}` : 
+                                            '(firstname + last 4 digits of enrollment)'}
+                                    </p>
+                                    <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.75rem', color: '#6b7280' }}>
+                                        Password will be auto-generated and shown once after creation. Student can change it after first login.
+                                    </p>
                                 </div>
                             )}
                             <div className="form-group checkbox-group">
