@@ -57,159 +57,117 @@ const Dashboard = () => {
 
     return (
       <div className="dashboard">
-        <h1>Welcome, {user?.first_name || user?.username}! 👋</h1>
-        <p style={{ color: '#666', marginBottom: '2rem' }}>Track your placement journey and stay updated</p>
+        <h1>Welcome, {user?.first_name || user?.username}</h1>
+        <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Track your placement journey</p>
 
-        {/* Quick Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Applications</div>
-            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginTop: '0.5rem' }}>{appliedCount}</div>
+        {/* Quick Stats - Only cards for KPIs */}
+        <div className="kpi-stats">
+          <div className="kpi-card">
+            <div className="kpi-label">Applications</div>
+            <div className="kpi-value">{appliedCount}</div>
           </div>
-          <div style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: 'white',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Selected/Offers</div>
-            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginTop: '0.5rem' }}>{selectedCount}</div>
+          <div className="kpi-card kpi-success">
+            <div className="kpi-label">Selected</div>
+            <div className="kpi-value">{selectedCount}</div>
           </div>
-          <div style={{
-            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-            color: 'white',
-            padding: '1.5rem',
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Pending</div>
-            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginTop: '0.5rem' }}>{pendingCount}</div>
+          <div className="kpi-card kpi-pending">
+            <div className="kpi-label">Pending</div>
+            <div className="kpi-value">{pendingCount}</div>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
-          {/* My Application Status */}
-          <div>
-            <h2 style={{ marginBottom: '1rem' }}>📊 My Applications</h2>
-            <div style={{ background: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              {myPlacements.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
-                  <p>No applications yet. Check out the companies below!</p>
-                </div>
-              ) : (
-                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  {myPlacements.map((placement, idx) => (
-                    <div key={idx} style={{
-                      padding: '1rem',
-                      borderBottom: idx < myPlacements.length - 1 ? '1px solid #eee' : 'none'
-                    }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{placement.company_name}</div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.875rem', color: '#666' }}>{placement.current_stage_name || 'Applied'}</span>
-                        <span className={`badge badge-${
-                          placement.status === 'OFFER_ACCEPTED' || placement.status === 'SELECTED' ? 'success' :
-                          placement.status === 'REJECTED' ? 'danger' :
-                          placement.status === 'IN_PROGRESS' ? 'warning' : 'info'
-                        }`}>
-                          {placement.status_display}
-                        </span>
-                      </div>
+        <div className="dashboard-sections">
+          {/* My Application Status - Flat section */}
+          <div className="section-panel">
+            <h2 className="section-title">My Applications</h2>
+            {myPlacements.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📝</div>
+                <p>No applications yet. Check out the companies below.</p>
+              </div>
+            ) : (
+              <div className="list-rows">
+                {myPlacements.map((placement, idx) => (
+                  <div key={idx} className="list-row">
+                    <div>
+                      <div className="list-title">{placement.company_name}</div>
+                      <div className="list-meta">{placement.current_stage_name || 'Applied'}</div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <span className={`badge badge-${
+                      placement.status === 'OFFER_ACCEPTED' || placement.status === 'SELECTED' ? 'success' :
+                      placement.status === 'REJECTED' ? 'danger' :
+                      placement.status === 'IN_PROGRESS' ? 'warning' : 'info'
+                    }`}>
+                      {placement.status_display}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Eligible Companies */}
-          <div>
-            <h2 style={{ marginBottom: '1rem' }}>🏢 Active Companies</h2>
-            <div style={{ background: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              {eligibleCompanies.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
-                  <p>No active companies at the moment</p>
-                </div>
-              ) : (
-                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  {eligibleCompanies.map((company, idx) => (
-                    <div key={idx} style={{
-                      padding: '1rem',
-                      borderBottom: idx < eligibleCompanies.length - 1 ? '1px solid #eee' : 'none'
-                    }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{company.name}</div>
-                      <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
-                        {company.job_role} • {company.job_location}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.875rem', color: '#667eea', fontWeight: 'bold' }}>
-                          ₹{company.package_offered} LPA
-                        </span>
-                        <span className="badge badge-secondary">{company.company_type_display}</span>
+          {/* Eligible Companies - Flat section */}
+          <div className="section-panel">
+            <h2 className="section-title">Active Companies</h2>
+            {eligibleCompanies.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">🏢</div>
+                <p>No active companies at the moment</p>
+              </div>
+            ) : (
+              <div className="list-rows">
+                {eligibleCompanies.map((company, idx) => (
+                  <div key={idx} className="list-row">
+                    <div>
+                      <div className="list-title">{company.name}</div>
+                      <div className="list-meta">{company.job_role} · {company.job_location}</div>
+                      <div className="list-meta" style={{ color: '#4f46e5', fontWeight: 600, marginTop: '0.25rem' }}>
+                        ₹{company.package_offered} LPA
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <span className="badge badge-secondary">{company.company_type_display}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Upcoming Events */}
-          <div style={{ gridColumn: 'span 2' }}>
-            <h2 style={{ marginBottom: '1rem' }}>📅 Upcoming Events</h2>
-            <div style={{ background: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              {upcomingEvents.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📅</div>
-                  <p>No upcoming events</p>
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gap: '1rem' }}>
-                  {upcomingEvents.map((event, idx) => (
-                    <div key={idx} style={{
-                      padding: '1rem',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      background: '#f9fafb'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                        <div>
-                          <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{event.title}</div>
-                          <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>
-                            📍 {event.location} • 📅 {new Date(event.event_date).toLocaleString()}
-                          </div>
-                          {event.company_name && (
-                            <div style={{ fontSize: '0.875rem', color: '#667eea' }}>
-                              🏢 {event.company_name}
-                            </div>
-                          )}
+          {/* Upcoming Events - Flat section, wider */}
+          <div className="section-panel section-wide">
+            <h2 className="section-title">Upcoming Events</h2>
+            {upcomingEvents.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📅</div>
+                <p>No upcoming events</p>
+              </div>
+            ) : (
+              <div className="events-list">
+                {upcomingEvents.map((event, idx) => (
+                  <div key={idx} className="event-row">
+                    <div className="event-content">
+                      <div className="list-title">{event.title}</div>
+                      <div className="list-meta">
+                        {event.location} · {new Date(event.event_date).toLocaleString('en-US', { 
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                        })}
+                      </div>
+                      {event.company_name && (
+                        <div className="list-meta" style={{ color: '#4f46e5', marginTop: '0.25rem' }}>
+                          {event.company_name}
                         </div>
-                        <span className="badge badge-primary">{event.event_type_display}</span>
-                      </div>
+                      )}
                       {event.link && (
                         <a href={event.link} target="_blank" rel="noopener noreferrer" 
-                          style={{ fontSize: '0.875rem', color: '#667eea', textDecoration: 'underline' }}>
-                          🔗 Event Link
+                          className="event-link">
+                          View Details →
                         </a>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <span className="badge badge-info">{event.event_type_display}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

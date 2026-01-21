@@ -98,6 +98,15 @@ const Navbar = () => {
                         </Link>
                     </li>
                 )}
+                {/* User Management - Admin only */}
+                {isAdmin && (
+                    <li>
+                        <Link to="/users" title="User Management" onClick={handleLinkClick}>
+                            <span className="icon">👥</span>
+                            {!isCollapsed && <span className="text">User Management</span>}
+                        </Link>
+                    </li>
+                )}
                 <li>
                     <Link to="/companies" title="Companies" onClick={handleLinkClick}>
                         <span className="icon">🏢</span>

@@ -15,7 +15,9 @@ import Students from "./components/Students";
 import Companies from "./components/Companies";
 import PlacementProgress from "./components/PlacementProgress";
 import ImportantDates from "./components/ImportantDates";
+import Profile from "./components/Profile";
 import Settings from "./components/Settings";
+import UserManagement from "./components/UserManagement";
 import "./App.css";
 
 function App() {
@@ -57,8 +59,15 @@ function App() {
                                                         <Students />
                                                     </ProtectedRoute>
                                                 }
-                                            />
+                                            />                                            {/* User Management - Admin only */}
                                             <Route
+                                                path="/users"
+                                                element={
+                                                    <ProtectedRoute allowedRoles={['ADMIN']}>
+                                                        <UserManagement />
+                                                    </ProtectedRoute>
+                                                }
+                                            />                                            <Route
                                                 path="/companies"
                                                 element={<Companies />}
                                             />
@@ -69,6 +78,10 @@ function App() {
                                             <Route
                                                 path="/important-dates"
                                                 element={<ImportantDates />}
+                                            />
+                                            <Route
+                                                path="/profile"
+                                                element={<Profile />}
                                             />
                                             <Route
                                                 path="/settings"

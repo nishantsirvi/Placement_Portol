@@ -7,6 +7,7 @@ from .views import (
     LogoutView,
     RegisterView,
     UpdateProfileView,
+    UserDetailView,
     UserListView,
     UserProfileView,
     VerifyUserView,
@@ -26,5 +27,6 @@ urlpatterns = [
     path("change-password/", ChangePasswordView.as_view(), name="change_password"),
     # User management endpoints (Admin)
     path("users/", UserListView.as_view(), name="user_list"),
+    path("users/<int:pk>/", UserDetailView.as_view(), name="user_detail"),
     path("users/<int:user_id>/verify/", VerifyUserView.as_view(), name="verify_user"),
 ]

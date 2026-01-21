@@ -162,6 +162,30 @@ class UserListView(generics.ListAPIView):
         return User.objects.filter(id=self.request.user.id)
 
 
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API endpoint to get, update, or delete a specific user (Admin only)
+    """
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        # Only admins can update or delete users
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            if not (self.request.user.is_admin or self.request.user.is_staff):
+                return [permissions.IsAdminUser()]
+        return super().get_permissions()
+
+    def perform_destroy(self, instance):
+        # Prevent deleting yourself
+        if instance.id == self.request.user.id:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("You cannot delete your own account")
+        instance.delete()
+
+
 class VerifyUserView(APIView):
     """
     API endpoint to verify a user (Admin only)

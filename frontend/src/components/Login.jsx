@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
@@ -27,27 +27,6 @@ function Login() {
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (demoUsername, demoPassword) => {
-    setUsername(demoUsername);
-    setPassword(demoPassword);
-    setError('');
-    setLoading(true);
-
-    try {
-      const result = await login(demoUsername, demoPassword);
-
-      if (result.success) {
-        navigate('/dashboard');
-      } else {
-        setError(result.error || 'Login failed.');
-      }
-    } catch (err) {
-      setError('Demo login failed.');
     } finally {
       setLoading(false);
     }
@@ -98,49 +77,6 @@ function Login() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        <div className="auth-divider">
-          <span>OR</span>
-        </div>
-
-        <div className="demo-credentials">
-          <p className="demo-title">Try Demo Accounts:</p>
-          <div className="demo-buttons">
-            <button
-              type="button"
-              className="btn btn-demo btn-admin"
-              onClick={() => handleDemoLogin('admin', 'admin123')}
-              disabled={loading}
-            >
-              👨‍💼 Admin Demo
-            </button>
-            <button
-              type="button"
-              className="btn btn-demo btn-student"
-              onClick={() => handleDemoLogin('john.doe', 'student123')}
-              disabled={loading}
-            >
-              🎓 Student Demo
-            </button>
-            <button
-              type="button"
-              className="btn btn-demo btn-company"
-              onClick={() => handleDemoLogin('company.rep', 'company123')}
-              disabled={loading}
-            >
-              🏢 Company Demo
-            </button>
-          </div>
-        </div>
-
-        <div className="auth-footer">
-          <p>
-            Don't have an account?{' '}
-            <Link to="/register" className="auth-link">
-              Sign up here
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

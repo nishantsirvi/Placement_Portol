@@ -165,8 +165,7 @@ function Register() {
               disabled={loading}
             >
               <option value="STUDENT">Student</option>
-              <option value="ADMIN">Admin/TPO</option>
-              <option value="COMPANY">Company Representative</option>
+              <option value="ADMIN">Admin/Faculty</option>
             </select>
           </div>
 

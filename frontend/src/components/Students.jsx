@@ -19,6 +19,8 @@ const Students = () => {
     const [filterPlaced, setFilterPlaced] = useState("ALL");
     const [showCredentialsModal, setShowCredentialsModal] = useState(false);
     const [tempCredentials, setTempCredentials] = useState({ username: '', password: '', name: '' });
+    const [showBulkUpload, setShowBulkUpload] = useState(false);
+    const [uploadResults, setUploadResults] = useState(null);
     const [formData, setFormData] = useState({
         enrollment_number: "",
         name: "",
@@ -113,6 +115,92 @@ const Students = () => {
         }
     };
 
+    const handleBulkUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const text = event.target.result;
+                const lines = text.split('\n').filter(line => line.trim());
+                
+                if (lines.length < 2) {
+                    alert('CSV file must have at least a header row and one data row');
+                    return;
+                }
+
+                // Parse CSV
+                const headers = lines[0].split(',').map(h => h.trim());
+                const students = [];
+                const errors = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    if (values.length !== headers.length) continue;
+
+                    const student = {};
+                    headers.forEach((header, index) => {
+                        student[header] = values[index];
+                    });
+
+                    // Validate required fields
+                    if (!student.enrollment_number || !student.name || !student.email) {
+                        errors.push(`Row ${i + 1}: Missing required fields`);
+                        continue;
+                    }
+
+                    students.push({
+                        enrollment_number: student.enrollment_number,
+                        name: student.name,
+                        email: student.email,
+                        phone: student.phone || '',
+                        branch: student.branch || 'CSE',
+                        year: student.year || '3',
+                        cgpa: student.cgpa || '',
+                        skills: student.skills || '',
+                        is_placed: student.is_placed === 'true' || student.is_placed === 'True',
+                        password: `${student.name.split(' ')[0].toLowerCase()}${student.enrollment_number.slice(-4)}`
+                    });
+                }
+
+                // Upload students one by one
+                const results = { success: 0, failed: 0, errors: [] };
+                for (const student of students) {
+                    try {
+                        await createStudent(student);
+                        results.success++;
+                    } catch (error) {
+                        results.failed++;
+                        results.errors.push(`${student.enrollment_number}: ${error.response?.data?.message || 'Failed to create'}`);
+                    }
+                }
+
+                setUploadResults(results);
+                fetchStudents();
+                setShowBulkUpload(false);
+                setTimeout(() => setUploadResults(null), 10000);
+            } catch (error) {
+                alert('Error parsing CSV file. Please check the format.');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
+
+    const downloadSampleCSV = () => {
+        const sampleCSV = `enrollment_number,name,email,phone,branch,year,cgpa,skills,is_placed
+CS2021001,John Doe,john@example.com,1234567890,CSE,4,8.5,"Python,Java,React",false
+CS2021002,Jane Smith,jane@example.com,1234567891,IT,3,9.0,"JavaScript,Node.js,MongoDB",false`;
+        const blob = new Blob([sampleCSV], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sample_students.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+
     const resetForm = () => {
         setFormData({
             enrollment_number: "",
@@ -165,14 +253,76 @@ const Students = () => {
             <div className="header">
                 <h1>Students Management</h1>
                 {isAdmin && (
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => setShowForm(!showForm)}
-                    >
-                        {showForm ? "Cancel" : "+ Add Student"}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => setShowForm(!showForm)}
+                        >
+                            {showForm ? "Cancel" : "+ Add Student"}
+                        </button>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowBulkUpload(!showBulkUpload)}
+                        >
+                            📤 Bulk Upload
+                        </button>
+                    </div>
                 )}
             </div>
+
+            {/* Bulk Upload Panel */}
+            {isAdmin && showBulkUpload && (
+                <div className="form-container" style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h2>Bulk Upload Students</h2>
+                        <button className="btn btn-secondary" onClick={() => setShowBulkUpload(false)}>
+                            Close
+                        </button>
+                    </div>
+                    <div style={{ marginBottom: '1rem' }}>
+                        <p style={{ color: '#6b7280', marginBottom: '0.5rem' }}>Upload a CSV file with student data. Required columns:</p>
+                        <code style={{ background: '#f3f4f6', padding: '0.5rem', borderRadius: '4px', display: 'block' }}>
+                            enrollment_number, name, email, phone, branch, year, cgpa, skills, is_placed
+                        </code>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <label className="btn btn-primary" style={{ margin: 0 }}>
+                            Choose CSV File
+                            <input
+                                type="file"
+                                accept=".csv"
+                                onChange={handleBulkUpload}
+                                style={{ display: 'none' }}
+                            />
+                        </label>
+                        <button className="btn btn-info" onClick={downloadSampleCSV}>
+                            📥 Download Sample CSV
+                        </button>
+                    </div>
+                    {uploadResults && (
+                        <div style={{
+                            marginTop: '1rem',
+                            padding: '1rem',
+                            background: uploadResults.failed > 0 ? '#fff3cd' : '#d4edda',
+                            borderRadius: '6px'
+                        }}>
+                            <strong>Upload Results:</strong>
+                            <p>✅ Successful: {uploadResults.success}</p>
+                            <p>❌ Failed: {uploadResults.failed}</p>
+                            {uploadResults.errors.length > 0 && (
+                                <div style={{ marginTop: '0.5rem' }}>
+                                    <strong>Errors:</strong>
+                                    <ul style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
+                                        {uploadResults.errors.map((error, idx) => (
+                                            <li key={idx} style={{ fontSize: '0.9rem' }}>{error}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Search and Filter Section */}
             <div className="search-filter-container" style={{
