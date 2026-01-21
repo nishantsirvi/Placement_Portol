@@ -57,7 +57,7 @@ const Settings = () => {
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.put(
+      await axios.put(
         `${API_URL}/auth/profile/update/`,
         profileData,
         {
