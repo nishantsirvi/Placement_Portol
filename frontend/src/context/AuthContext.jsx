@@ -4,7 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 
 export const AuthContext = createContext();
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'https://placement-tracker-backend-yt8n.onrender.com/api';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
