@@ -4,6 +4,7 @@ import {
     createStudent,
     updateStudent,
     deleteStudent,
+    uploadStudentsCSV,
 } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -119,72 +120,31 @@ const Students = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            try {
-                const text = event.target.result;
-                const lines = text.split('\n').filter(line => line.trim());
-                
-                if (lines.length < 2) {
-                    alert('CSV file must have at least a header row and one data row');
-                    return;
-                }
+        if (!file.name.endsWith('.csv')) {
+            alert('Please upload a CSV file');
+            e.target.value = '';
+            return;
+        }
 
-                // Parse CSV
-                const headers = lines[0].split(',').map(h => h.trim());
-                const students = [];
-                const errors = [];
-
-                for (let i = 1; i < lines.length; i++) {
-                    const values = lines[i].split(',').map(v => v.trim());
-                    if (values.length !== headers.length) continue;
-
-                    const student = {};
-                    headers.forEach((header, index) => {
-                        student[header] = values[index];
-                    });
-
-                    // Validate required fields
-                    if (!student.enrollment_number || !student.name || !student.email) {
-                        errors.push(`Row ${i + 1}: Missing required fields`);
-                        continue;
-                    }
-
-                    students.push({
-                        enrollment_number: student.enrollment_number,
-                        name: student.name,
-                        email: student.email,
-                        phone: student.phone || '',
-                        branch: student.branch || 'CSE',
-                        year: student.year || '3',
-                        cgpa: student.cgpa || '',
-                        skills: student.skills || '',
-                        is_placed: student.is_placed === 'true' || student.is_placed === 'True',
-                        password: `${student.name.split(' ')[0].toLowerCase()}${student.enrollment_number.slice(-4)}`
-                    });
-                }
-
-                // Upload students one by one
-                const results = { success: 0, failed: 0, errors: [] };
-                for (const student of students) {
-                    try {
-                        await createStudent(student);
-                        results.success++;
-                    } catch (error) {
-                        results.failed++;
-                        results.errors.push(`${student.enrollment_number}: ${error.response?.data?.message || 'Failed to create'}`);
-                    }
-                }
-
-                setUploadResults(results);
-                fetchStudents();
-                setShowBulkUpload(false);
-                setTimeout(() => setUploadResults(null), 10000);
-            } catch (error) {
-                alert('Error parsing CSV file. Please check the format.');
-            }
-        };
-        reader.readAsText(file);
+        try {
+            const response = await uploadStudentsCSV(file);
+            const results = response.data;
+            
+            setUploadResults({
+                success: results.created + results.updated,
+                failed: results.errors.length,
+                errors: results.errors,
+                created: results.created,
+                updated: results.updated
+            });
+            
+            fetchStudents();
+            setShowBulkUpload(false);
+            setTimeout(() => setUploadResults(null), 15000);
+        } catch (error) {
+            console.error("Error uploading CSV:", error);
+            alert(error.response?.data?.error || 'Error uploading CSV file. Please check the format.');
+        }
         e.target.value = '';
     };
 

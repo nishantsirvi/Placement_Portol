@@ -4,6 +4,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+import csv
+import io
 
 from .models import (
     Company,
@@ -77,6 +79,77 @@ class StudentViewSet(viewsets.ModelViewSet):
         placements = PlacementProgress.objects.filter(student=student)
         serializer = PlacementProgressSerializer(placements, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["post"], permission_classes=[IsAdmin])
+    def upload_csv(self, request):
+        """Upload students from CSV file"""
+        if 'file' not in request.FILES:
+            return Response(
+                {"error": "No file provided"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        csv_file = request.FILES['file']
+        
+        # Check if file is CSV
+        if not csv_file.name.endswith('.csv'):
+            return Response(
+                {"error": "File must be a CSV"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Read and decode the file
+            decoded_file = csv_file.read().decode('utf-8')
+            io_string = io.StringIO(decoded_file)
+            reader = csv.DictReader(io_string)
+            
+            created_count = 0
+            updated_count = 0
+            errors = []
+            
+            for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is 1)
+                try:
+                    enrollment_number = row.get('enrollment_number', '').strip()
+                    if not enrollment_number:
+                        errors.append(f"Row {row_num}: Missing enrollment_number")
+                        continue
+                    
+                    # Check if student exists
+                    student, created = Student.objects.update_or_create(
+                        enrollment_number=enrollment_number,
+                        defaults={
+                            'name': row.get('name', '').strip(),
+                            'email': row.get('email', '').strip(),
+                            'phone': row.get('phone', '').strip(),
+                            'branch': row.get('branch', '').strip(),
+                            'year': row.get('year', '').strip(),
+                            'cgpa': float(row.get('cgpa', 0)),
+                            'skills': row.get('skills', '').strip(),
+                            'is_placed': row.get('is_placed', 'FALSE').strip().upper() == 'TRUE',
+                        }
+                    )
+                    
+                    if created:
+                        created_count += 1
+                    else:
+                        updated_count += 1
+                        
+                except Exception as e:
+                    errors.append(f"Row {row_num}: {str(e)}")
+            
+            return Response({
+                "message": "CSV processed successfully",
+                "created": created_count,
+                "updated": updated_count,
+                "errors": errors
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {"error": f"Error processing CSV: {str(e)}"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class CompanyViewSet(viewsets.ModelViewSet):

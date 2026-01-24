@@ -75,6 +75,15 @@ export const getUnplacedStudents = () =>
     api.get("/students/unplaced_students/");
 export const getStudentPlacementHistory = (id) =>
     api.get(`/students/${id}/placement_history/`);
+export const uploadStudentsCSV = (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.post("/students/upload_csv/", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+};
 
 // Companies API
 export const getCompanies = () => api.get("/companies/");
