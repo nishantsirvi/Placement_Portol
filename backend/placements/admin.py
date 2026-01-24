@@ -1,13 +1,55 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from .models import Student, Company, PlacementStage, PlacementProgress, StageProgress, ImportantDate
+
+User = get_user_model()
 
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['enrollment_number', 'name', 'branch', 'year', 'cgpa', 'is_placed']
+    list_display = ['enrollment_number', 'name', 'branch', 'year', 'cgpa', 'is_placed', 'user']
     list_filter = ['branch', 'year', 'is_placed']
     search_fields = ['enrollment_number', 'name', 'email']
     ordering = ['-created_at']
+    
+    def save_model(self, request, obj, form, change):
+        """
+        Automatically create and link a User account when creating a student
+        """
+        super().save_model(request, obj, form, change)
+        
+        # If student doesn't have a linked user account, create one
+        if not obj.user:
+            username = obj.enrollment_number.lower()
+            
+            # Check if user already exists
+            existing_user = User.objects.filter(username=username).first()
+            if existing_user:
+                # Link existing user
+                obj.user = existing_user
+                obj.save()
+            else:
+                # Create new user account
+                password = f"{obj.name.split()[0].lower()}{obj.enrollment_number[-4:]}"
+                user = User.objects.create_user(
+                    username=username,
+                    email=obj.email,
+                    password=password,
+                    first_name=obj.name.split()[0] if obj.name else '',
+                    last_name=' '.join(obj.name.split()[1:]) if len(obj.name.split()) > 1 else '',
+                    role='STUDENT',
+                    phone=obj.phone
+                )
+                obj.user = user
+                obj.save()
+                self.message_user(request, f"User account created: {username} / Password: {password}")
+        
+        # Also check if there's an existing user with this email but not linked
+        elif not change:  # Only on creation
+            existing_user = User.objects.filter(email=obj.email, role='STUDENT').exclude(id=obj.user.id).first()
+            if existing_user and not hasattr(existing_user, 'student_profile'):
+                obj.user = existing_user
+                obj.save()
 
 
 @admin.register(Company)
