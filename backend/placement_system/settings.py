@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from decouple import config, Csv
+import dj_database_url
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -63,16 +64,24 @@ WSGI_APPLICATION = "placement_system.wsgi.application"
 
 # Database
 # Use environment variables for database configuration
-DATABASES = {
-    "default": {
-        "ENGINE": config('DATABASE_ENGINE', default='django.db.backends.sqlite3'),
-        "NAME": config('DATABASE_NAME', default=str(BASE_DIR / "db.sqlite3")),
-        "USER": config('DATABASE_USER', default=''),
-        "PASSWORD": config('DATABASE_PASSWORD', default=''),
-        "HOST": config('DATABASE_HOST', default=''),
-        "PORT": config('DATABASE_PORT', default=''),
+# On Render, use the DATABASE_URL environment variable (PostgreSQL)
+# Locally, fall back to SQLite
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": config('DATABASE_ENGINE', default='django.db.backends.sqlite3'),
+            "NAME": config('DATABASE_NAME', default=str(BASE_DIR / "db.sqlite3")),
+            "USER": config('DATABASE_USER', default=''),
+            "PASSWORD": config('DATABASE_PASSWORD', default=''),
+            "HOST": config('DATABASE_HOST', default=''),
+            "PORT": config('DATABASE_PORT', default=''),
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

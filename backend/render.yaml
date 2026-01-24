@@ -1,0 +1,27 @@
+{
+  "services": [
+    {
+      "type": "web",
+      "name": "placement-tracking-backend",
+      "env": "python",
+      "buildCommand": "pip install -r requirements.txt",
+      "startCommand": "bash start.sh",
+      "envVars": [
+        {
+          "key": "PYTHON_VERSION",
+          "value": "3.11.0"
+        },
+        {
+          "key": "DEBUG",
+          "value": "False"
+        }
+      ]
+    }
+  ],
+  "databases": [
+    {
+      "name": "placement-tracking-db",
+      "plan": "free"
+    }
+  ]
+}
