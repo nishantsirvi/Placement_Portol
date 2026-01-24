@@ -1,5 +1,6 @@
 from accounts.permissions import IsAdmin, IsAdminOrReadOnly, IsOwnerOrAdmin, IsStudent
 from django.db.models import Avg, Count, Q
+from django.db import models
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -192,9 +193,47 @@ class PlacementProgressViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_admin or user.is_staff:
             return PlacementProgress.objects.all()
-        elif user.is_student and hasattr(user, "student_profile"):
-            return PlacementProgress.objects.filter(student=user.student_profile)
+        elif user.is_student:
+            if hasattr(user, "student_profile") and user.student_profile:
+                return PlacementProgress.objects.filter(student=user.student_profile)
+            else:
+                # Student user exists but no student profile linked
+                # Try to find student by email or username
+                student = Student.objects.filter(
+                    models.Q(email=user.email) | 
+                    models.Q(enrollment_number=user.username.upper())
+                ).first()
+                if student:
+                    # Link the student to user if found
+                    student.user = user
+                    student.save()
+                    return PlacementProgress.objects.filter(student=student)
         return PlacementProgress.objects.none()
+    
+    @action(detail=False, methods=["get"])
+    def my_progress(self, request):
+        """Get current user's placement progress with debug info"""
+        user = request.user
+        
+        debug_info = {
+            "user_id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role,
+            "is_student": user.is_student,
+            "has_student_profile": hasattr(user, "student_profile"),
+            "student_profile_id": user.student_profile.id if hasattr(user, "student_profile") and user.student_profile else None,
+        }
+        
+        # Get placement progress
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        return Response({
+            "debug": debug_info,
+            "count": queryset.count(),
+            "results": serializer.data
+        })
 
     @action(detail=False, methods=["get"])
     def statistics(self, request):

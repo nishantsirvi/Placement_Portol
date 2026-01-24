@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  getPlacementProgress, 
+  getPlacementProgress,
+  getMyProgress,
   createPlacementProgress, 
   updatePlacementProgress,
   deletePlacementProgress,
@@ -21,6 +22,7 @@ const PlacementProgress = () => {
   const [editingPlacement, setEditingPlacement] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [debugInfo, setDebugInfo] = useState(null);
   const [formData, setFormData] = useState({
     student: '',
     company: '',
@@ -37,9 +39,10 @@ const PlacementProgress = () => {
   const fetchData = async () => {
     try {
       if (isStudent) {
-        // Students only need to see their own placement progress
-        const placementsRes = await getPlacementProgress();
-        setPlacements(placementsRes.data.results || placementsRes.data);
+        // Students - use debug endpoint
+        const response = await getMyProgress();
+        setPlacements(response.data.results || []);
+        setDebugInfo(response.data.debug);
       } else {
         // Admins and companies need all data
         const [placementsRes, studentsRes, companiesRes, stagesRes] = await Promise.all([
@@ -160,6 +163,32 @@ const PlacementProgress = () => {
           </button>
         )}
       </div>
+
+      {/* Debug Info for Students */}
+      {debugInfo && (
+        <div style={{
+          background: debugInfo.has_student_profile ? '#d4edda' : '#fff3cd',
+          border: `1px solid ${debugInfo.has_student_profile ? '#c3e6cb' : '#ffc107'}`,
+          padding: '1rem',
+          borderRadius: '8px',
+          marginBottom: '1.5rem',
+          fontSize: '0.875rem'
+        }}>
+          <strong>Account Status:</strong>
+          <ul style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+            <li>Username: {debugInfo.username}</li>
+            <li>Email: {debugInfo.email}</li>
+            <li>Role: {debugInfo.role}</li>
+            <li>Has Student Profile: {debugInfo.has_student_profile ? '✅ Yes' : '❌ No'}</li>
+            {debugInfo.student_profile_id && <li>Student Profile ID: {debugInfo.student_profile_id}</li>}
+          </ul>
+          {!debugInfo.has_student_profile && (
+            <p style={{ marginTop: '0.5rem', marginBottom: 0, color: '#856404' }}>
+              ⚠️ Your account is not linked to a student profile. Please contact admin to link your account.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Search and Filter Section */}
       {placements.length > 0 && (

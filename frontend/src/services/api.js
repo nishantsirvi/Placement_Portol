@@ -104,6 +104,7 @@ export const deleteStage = (id) => api.delete(`/stages/${id}/`);
 
 // Placement Progress API
 export const getPlacementProgress = () => api.get("/placement-progress/");
+export const getMyProgress = () => api.get("/placement-progress/my_progress/");
 export const getPlacementProgressById = (id) =>
     api.get(`/placement-progress/${id}/`);
 export const createPlacementProgress = (data) =>
